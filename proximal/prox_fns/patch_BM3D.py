@@ -8,7 +8,6 @@ class patch_BM3D(ProxFn):
     """
 
     def __init__(self, lin_op, sigma_fixed=0.0, patch_size=8, **kwargs):
-
         # Check for the shape
         if not (len(lin_op.shape) == 2 or len(lin_op.shape) == 3 and lin_op.shape[2] in [1, 3]):
             raise ValueError('BM3D needs a 3 or 1 channel image')
