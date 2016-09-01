@@ -116,9 +116,9 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
 
             # Moreau identity: apply and time prox.
             prox_log[fn].tic()
-
             y[slc] = (z_slc - sigma * fn.prox(sigma, z_slc / sigma, i, verbose=verbose)).flatten()
             prox_log[fn].toc()
+
             offset += fn.lin_op.size
         y[offset:] = 0
 
