@@ -40,7 +40,6 @@ class patch_NLM(ProxFn):
     def _prox(self, rho, v, *args, **kwargs):
         """x = denoise_gaussian_NLM( tonemap(v), sqrt(1/rho))
         """
-
         if self.implementation == Impl['halide'] and \
            len(self.lin_op.shape) == 3 and self.lin_op.shape[2] == 3:
 
@@ -60,8 +59,9 @@ class patch_NLM(ProxFn):
                 sigma_estim = self.sigma_fixed / 30.0 * self.sigma_scale
 
             # Params
-            # print("Prox NLM params are: [sigma ={0} prior={1} sigma_scale={2}]".format(
-            #     sigma_estim, self.prior, self.sigma_scale))
+            if kwargs['verbose'] > 1:
+                print("Prox NLM params are: [sigma ={0} prior={1} sigma_scale={2}]".format(
+                    sigma_estim, self.prior, self.sigma_scale))
 
             # Scale d
             v = v.copy()
