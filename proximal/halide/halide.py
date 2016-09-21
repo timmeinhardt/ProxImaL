@@ -166,7 +166,6 @@ def gengen(generator_source, builddir='./build',
     # Build directory
     if not os.path.exists(builddir):
         os.makedirs(builddir)
-
     # Generator code is a temporary file
     generator = os.path.join(builddir, 'gengen.XXXX')
 
@@ -213,9 +212,15 @@ def gengen(generator_source, builddir='./build',
         subprocess.call(cmd, shell=True)
 
         # Run generator
-        cmd = '{0} {1} {2} -e o,h -o {3} {4}'.format(generator,
-                                                     generator_flag, function_flag,
-                                                     builddir, target_flags)
+        env = os.environ.copy()
+        if sys.platform == "linux" or sys.platform == "linux2":
+            ld = 'LD_LIBRARY_PATH'
+        elif sys.platform == "darwin":
+            ld = 'DYLD_LIBRARY_PATH'
+
+        cmd = 'export {5}={6} && export LD_LIBRARY_PATH={5} && {0} {1} {2} -e o,h -o {3} {4}'.format(generator,
+                                              generator_flag, function_flag, builddir, target_flags, ld, env[ld])
+
         if verbose:
             print('Calling generator')
             print('\t' + cmd)
@@ -382,6 +387,7 @@ def generate_launcher_arguments(params):
     argument_defs = []
     argument_names = []
     call_names = []
+
     for id, param in enumerate(params):
 
         # Name of current argument

@@ -45,7 +45,10 @@ class patch_NLM(ProxFn):
 
             # Halide implementation
             tmpin = np.asfortranarray(v.astype(np.float32))
-            Halide('prox_NLM.cpp').prox_NLM(tmpin, 1. / rho, self.paramsh, self.tmpout)
+
+            ext_libs = '-lopencv_core', '-lopencv_imgproc', '-lopencv_cudaarithm', '-lopencv_cudev', '-lopencv_photo', '-lm'
+            ext_srcs = ['external/external_NLM.cpp']
+            Halide('prox_NLM.cpp', external_source=ext_srcs, external_libs=ext_libs).prox_NLM(tmpin, 1. / rho, self.paramsh, self.tmpout)
             np.copyto(v, self.tmpout)
 
         else:

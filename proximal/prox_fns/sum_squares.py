@@ -153,12 +153,14 @@ class least_squares(sum_squares):
             Ktb = np.zeros(self.K.input_size)
             self.K.adjoint(b, Ktb)
 
+            hflags = ['-DWTARGET={0} -DHTARGET={1}'.format(self.freq_shape[1], self.freq_shape[0])]
+
             # Frequency inversion
             if self.implementation == Impl['halide'] and \
                     (len(self.freq_shape) == 2 or
                      (len(self.freq_shape) == 2 and self.freq_dims == 2)):
 
-                Halide('fft2_r2c.cpp').fft2_r2c(np.asfortranarray(np.reshape(
+                Halide('fft2_r2c.cpp', compile_flags=hflags).fft2_r2c(np.asfortranarray(np.reshape(
                     Ktb.astype(np.float32), self.freq_shape)), 0, 0, self.ftmp_halide)
 
                 Ktb = 1j * self.ftmp_halide[..., 1]
@@ -177,7 +179,7 @@ class least_squares(sum_squares):
 
                 # Do inverse tranform
                 Ktb = np.asfortranarray(np.stack((Ktb.real, Ktb.imag), axis=-1))
-                Halide('ifft2_c2r.cpp').ifft2_c2r(Ktb, self.ftmp_halide_out)
+                Halide('ifft2_c2r.cpp', compile_flags=hflags).ifft2_c2r(Ktb, self.ftmp_halide_out)
 
                 return self.ftmp_halide_out.ravel()
 
