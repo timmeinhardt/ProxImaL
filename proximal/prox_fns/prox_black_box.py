@@ -1,6 +1,7 @@
 from .prox_fn import ProxFn
 import numpy as np
 
+
 class prox_black_box(ProxFn):
     """A black-box proxable function specified by the user.
     """
@@ -12,7 +13,12 @@ class prox_black_box(ProxFn):
     def _prox(self, rho, v, *args, **kwargs):
         """The prox operator.
         """
-        return self.__prox(v)
+        v = v.copy()
+        dst = self.__prox(v)
+
+        np.copyto(v, dst)
+
+        return v
 
     def _eval(self, v):
         """Evaluate the function on v (ignoring parameters).

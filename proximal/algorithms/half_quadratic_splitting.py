@@ -80,6 +80,7 @@ def solve(psi_fns, omega_fns,
     # Rho scedule
     rho = rho_0
     i = 0
+
     while rho < rho_max and i < max_iters:
         iter_timing.tic()
         if convlog is not None:

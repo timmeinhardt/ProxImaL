@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 # Imports
+import subprocess
 import numpy as np
 from numpy.fft import fftn, ifftn, fft2, ifft2
 import cv2
@@ -12,6 +13,10 @@ import sys
 ###############################################################################
 
 Impl = {'numpy': 0, 'halide': 1}
+
+CUDA_AVAILABLE = False
+if subprocess.Popen('which nvcc', shell=True).communicate()[0] is not None:
+    CUDA_AVAILABLE = True
 
 ###############################################################################
 # TODO: DIRTY HACK FOR BACKWARDS COMPATIBILITY!

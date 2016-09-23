@@ -1,6 +1,6 @@
 from .prox_fn import ProxFn
 import numpy as np
-from proximal.utils.utils import Impl
+from proximal.utils.utils import Impl, CUDA_AVAILABLE
 from proximal.halide.halide import Halide
 import cv2
 
@@ -41,7 +41,8 @@ class patch_NLM(ProxFn):
         """x = denoise_gaussian_NLM( tonemap(v), sqrt(1/rho))
         """
         if self.implementation == Impl['halide'] and \
-           len(self.lin_op.shape) == 3 and self.lin_op.shape[2] == 3:
+           len(self.lin_op.shape) == 3 and self.lin_op.shape[2] == 3 and \
+           CUDA_AVAILABLE:
 
             # Halide implementation
             tmpin = np.asfortranarray(v.astype(np.float32))
