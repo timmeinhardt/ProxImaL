@@ -32,4 +32,4 @@ class prox_black_box(ProxFn):
         -------
         list
         """
-        return []   # TODO: IGNORE FOR NOW
+        return [self.__prox]
