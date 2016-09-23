@@ -15,7 +15,7 @@ import sys
 Impl = {'numpy': 0, 'halide': 1}
 
 CUDA_AVAILABLE = False
-if subprocess.Popen('which nvcc', stdout=subprocess.PIPE, shell=True).communicate()[0] is not None:
+if subprocess.Popen('which nvcc', shell=True).communicate()[0] is not None:
     CUDA_AVAILABLE = True
 
 ###############################################################################
