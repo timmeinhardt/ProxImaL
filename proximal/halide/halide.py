@@ -218,8 +218,8 @@ def gengen(generator_source, builddir='./build',
         elif sys.platform == "darwin":
             ld = 'DYLD_LIBRARY_PATH'
 
-        cmd = 'export {5}={6} && export LD_LIBRARY_PATH={5} && {0} {1} {2} -e o,h -o {3} {4}'.format(generator,
-                                              generator_flag, function_flag, builddir, target_flags, ld, env[ld])
+        cmd = 'export {5}={6} && {0} {1} {2} -e o,h -o {3} {4}'.format(
+            generator, generator_flag, function_flag, builddir, target_flags, ld, env[ld])
 
         if verbose:
             print('Calling generator')
