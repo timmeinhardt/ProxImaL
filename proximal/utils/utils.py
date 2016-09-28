@@ -190,7 +190,7 @@ def psf2otf(K, outsize, dims=None):
 
 def psnr(x, ref, pad=None, maxval=1.0):
 
-    # Sheck size
+    # Check size
     if ref.shape != x.shape:
         raise Exception("Wrong size in PSNR evaluation.")
 
