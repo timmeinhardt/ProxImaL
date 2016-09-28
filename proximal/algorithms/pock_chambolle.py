@@ -2,6 +2,7 @@ from __future__ import print_function
 from proximal.lin_ops import (CompGraph, est_CompGraph_norm, Variable,
                               vstack)
 from proximal.utils.timings_log import TimingsLog, TimingsEntry
+from proximal.utils.utils import psnr
 from .invert import get_least_squares_inverse, max_diag_set
 import numpy as np
 
@@ -193,6 +194,16 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                       "SUM = %02.02e (eps=%02.03e)%s%s" \
                         % (i, r_x, r_xbar, r_ybar, error, eps, objstr, metstr)
                 """
+                if ground_truth is not None:
+                    x_now = x.copy()
+                    if scaled:
+                        x_now /= np.sqrt(3.0)
+                    prev_score = score
+                    score = psnr(ground_truth.reshape(128,128), x_now.reshape(128,128), pad=(12,12))
+                    print(score)
+                    if prev_score > score:
+                        break
+
                 # Evaluate metric potentially
                 print(score)
                 metstr = '' if metric is None else ", {}".format(metric.message(v))

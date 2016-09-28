@@ -201,17 +201,10 @@ def gengen(generator_source, builddir='./build',
             for cf in compile_flags:
                 compile_flag_str += cf + ' '
 
-        # Run generator
-        env = os.environ.copy()
-        if sys.platform == "linux" or sys.platform == "linux2":
-            ld = 'LD_LIBRARY_PATH'
-        elif sys.platform == "darwin":
-            ld = 'DYLD_LIBRARY_PATH'
-
         # Compile
-        cmd = ("export LD_LIBRARY_PATH={6} && g++ {0} -g -Wwrite-strings -std=c++11 -fno-rtti {1} {2} {3} {4} "
+        cmd = ("g++ {0} -g -Wwrite-strings -std=c++11 -fno-rtti {1} {2} {3} {4} "
                " -lz -lpthread -ldl -o {5}").format(
-            compile_flag_str, halid_incl, generator_source, generator_main, halide_lib, generator, env['LD_LIBRARY_PATH'])
+            compile_flag_str, halid_incl, generator_source, generator_main, halide_lib, generator)
 
         if verbose:
             print('Compiling {0}'.format(generator_source))
