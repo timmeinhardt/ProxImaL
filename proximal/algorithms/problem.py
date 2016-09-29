@@ -125,6 +125,7 @@ class Problem(object):
                 K = CompGraph(vstack([fn.lin_op for fn in psi_fns]),
                               implem=self.implem)
                 Knorm = est_CompGraph_norm(K, try_fast_norm=self.try_fast_norm)
+                kwargs['Knorm'] = Knorm
                 for idx, fn in enumerate(psi_fns):
                     psi_fns[idx] = fn.copy(fn.lin_op / Knorm,
                                            beta=fn.beta * np.sqrt(Knorm),

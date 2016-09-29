@@ -2,7 +2,6 @@ from __future__ import print_function
 from proximal.lin_ops import (CompGraph, est_CompGraph_norm, Variable,
                               vstack)
 from proximal.utils.timings_log import TimingsLog, TimingsEntry
-from proximal.utils.utils import psnr
 from .invert import get_least_squares_inverse, max_diag_set
 import numpy as np
 
@@ -45,7 +44,8 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
           max_iters=1000, eps_abs=1e-3, eps_rel=1e-3, x0=None,
           lin_solver="cg", lin_solver_options=None, conv_check=100,
           try_diagonalize=True, try_fast_norm=False, scaled=True,
-          metric=None, convlog=None, verbose=0, ground_truth=None):
+          metric=None, convlog=None, verbose=0, score_func=None,
+          Knorm=None):
     # Can only have one omega function.
     assert len(omega_fns) <= 1
     prox_fns = psi_fns + omega_fns
@@ -116,6 +116,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
 
             # Moreau identity: apply and time prox.
             prox_log[fn].tic()
+
             y[slc] = (z_slc - sigma * fn.prox(sigma, z_slc / sigma, i, verbose=verbose)).flatten()
             prox_log[fn].toc()
             offset += fn.lin_op.size
@@ -167,6 +168,13 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
             K.adjoint(u, KTu)
             eps_dual = np.sqrt(K.input_size) * eps_abs + eps_rel * np.linalg.norm(KTu) / sigma
 
+            if score_func is not None:
+                x_now = x.copy()
+                if scaled:
+                    x_now /= np.sqrt(Knorm)
+                prev_score = score
+                score = score_func(x_now)
+
             # Progress
             if verbose > 0:
                 # Evaluate objective only if required (expensive !)
@@ -185,21 +193,16 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                       "SUM = %02.02e (eps=%02.03e)%s%s" \
                         % (i, r_x, r_xbar, r_ybar, error, eps, objstr, metstr)
                 """
-                if ground_truth is not None:
-                    x_now = x.copy()
-                    if scaled:
-                        x_now /= np.sqrt(3.0)
-                    prev_score = score
-                    score = psnr(ground_truth.reshape(128,128), x_now.reshape(128,128), pad=(12,12))
-                    print(score)
-                    if prev_score > score:
-                        break
                 # Evaluate metric potentially
+                print(score)
                 metstr = '' if metric is None else ", {}".format(metric.message(v))
                 print(
                     "iter %d: ||r||_2 = %.3f, eps_pri = %.3f, ||s||_2 = %.3f, eps_dual = %.3f%s%s"
                     % (i, np.linalg.norm(r), eps_pri, np.linalg.norm(s), eps_dual, objstr, metstr)
                 )
+
+            if score_func is not None and prev_score > score:
+                break
 
             iter_timing.toc()
             if np.linalg.norm(r) <= eps_pri and np.linalg.norm(s) <= eps_dual:
