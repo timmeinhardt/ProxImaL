@@ -2,7 +2,6 @@ from __future__ import print_function
 from proximal.lin_ops import (CompGraph, est_CompGraph_norm, Variable,
                               vstack)
 from proximal.utils.timings_log import TimingsLog, TimingsEntry
-from proximal.utils.utils import psnr
 from .invert import get_least_squares_inverse, max_diag_set
 import numpy as np
 
@@ -117,6 +116,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
 
             # Moreau identity: apply and time prox.
             prox_log[fn].tic()
+
             y[slc] = (z_slc - sigma * fn.prox(sigma, z_slc / sigma, i, verbose=verbose)).flatten()
             prox_log[fn].toc()
 
