@@ -2,6 +2,7 @@ from . import admm
 from . import pock_chambolle as pc
 from . import half_quadratic_splitting as hqs
 from . import linearized_admm as ladmm
+from . import forward_backward_splitting as fbs
 from proximal.utils.utils import Impl
 from proximal.lin_ops import Variable, CompGraph, est_CompGraph_norm, vstack
 from proximal.prox_fns import ProxFn
@@ -17,6 +18,7 @@ NAME_TO_SOLVER = {
     "hqs": hqs,
     "linearized_admm": ladmm,
     "ladmm": ladmm,
+    "fbs": fbs
 }
 
 
