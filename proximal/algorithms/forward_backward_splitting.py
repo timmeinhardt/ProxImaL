@@ -29,7 +29,7 @@ def partition(prox_fns, try_diagonalize=True):
         alpha_terms = []
         for fn in quad_fns:
             #fn = fn.absorb_params()
-            quad_ops.append(fn.beta * fn.lin_op)
+            quad_ops.append(fn.alpha * fn.beta * fn.lin_op)
             const_terms.append(fn.b.flatten())
             alpha_terms.append(fn.alpha)
 
