@@ -26,28 +26,31 @@ def partition(prox_fns, try_diagonalize=True):
         # G(x) + 1/(2*tau) * ||x - v||^2_2, with G containing all quadratics
         quad_ops = []
         const_terms = []
+        alpha_terms = []
         for fn in quad_fns:
             #fn = fn.absorb_params()
-            quad_ops.append(fn.alpha * fn.beta * fn.lin_op)
+            quad_ops.append(fn.beta * fn.lin_op)
             const_terms.append(fn.b.flatten())
+            alpha_terms.append(fn.alpha)
 
         b = np.hstack(const_terms)
+        alphas = np.hstack(alpha_terms)
         # Get optimize inverse (tries spatial and frequency diagonalization)
         # x_update = get_least_squares_inverse(quad_ops, b, try_diagonalize)
-        omega_fns = [vstack(quad_ops), b]
+        omega_fns = [vstack(quad_ops), b, alphas]
 
     psi_fns = [func for func in prox_fns if func not in split_fn + quad_fns]
     return psi_fns, omega_fns
 
 
 def solve(psi_fns, omega_fns, tau=None, alpha=1.0,
-          max_iters=1000, eps_abs=1e-3, eps_rel=1e-3, x0=None,
+          max_iters=1000, eps=1e-3, x0=None,
           lin_solver="cg", lin_solver_options=None,
           try_diagonalize=True, try_fast_norm=False, scaled=True,
           metric=None, convlog=None, verbose=0, score_func=None,
           Knorm=None):
-    # Can only have one omega function.
-    assert len(omega_fns) <= 2
+    # omega consists of squared terms and constant terms like f.
+    assert len(omega_fns) <= 3
     prox_fns = psi_fns + omega_fns[0:1]
     K = CompGraph(omega_fns[0])
     v = np.zeros(K.input_size)
@@ -57,32 +60,23 @@ def solve(psi_fns, omega_fns, tau=None, alpha=1.0,
     # Initialize
     x = np.zeros(K.input_size)
     y = np.zeros(K.output_size)
-    xbar = np.zeros(K.input_size)
-    u = np.zeros(K.output_size)
-    z = np.zeros(K.output_size)
 
     if x0 is not None:
         x[:] = np.reshape(x0, K.input_size)
         K.forward(x, y)
-        xbar[:] = x
 
     # Buffers.
-    Kxbar = np.zeros(K.output_size)
     Kx = np.zeros(K.output_size)
-    KTy = np.zeros(K.input_size)
     KTKx = np.zeros(K.input_size)
-    KTu = np.zeros(K.input_size)
-    s = np.zeros(K.input_size)
 
     prev_x = x.copy()
     prev_Kx = Kx.copy()
-    prev_z = z.copy()
-    prev_u = u.copy()
+    prev_y = y.copy()
 
     # Log for prox ops.
     prox_log = TimingsLog(prox_fns)
     # Time iterations.
-    iter_timing = TimingsEntry("PC iteration")
+    iter_timing = TimingsEntry("FBS iteration")
 
     # Convergence log for initial iterate
     if convlog is not None:
@@ -99,14 +93,13 @@ def solve(psi_fns, omega_fns, tau=None, alpha=1.0,
 
         # Keep track of previous iterates
         np.copyto(prev_x, x)
-        np.copyto(prev_z, z)
-        np.copyto(prev_u, u)
         np.copyto(prev_Kx, Kx)
+        np.copyto(prev_y, y)
 
         # Compute x
         K.forward(x, Kx)
         K.adjoint(Kx - omega_fns[1], KTKx)
-        x = x - tau * KTKx
+        x = x - tau * omega_fns[2] * KTKx
 
         # Update y.
         offset = 0
@@ -130,29 +123,26 @@ def solve(psi_fns, omega_fns, tau=None, alpha=1.0,
             objval = sum([fn.value for fn in prox_fns])
             convlog.record_objective(objval)
 
-        # Iteration order is different than
-        if i > 0:
+        # Check convergence
+        r_x = np.linalg.norm(x - prev_x)
+        r_y = np.linalg.norm(y - prev_y)
+        error = r_x + r_y
 
-            # Check convergence
+        if score_func is not None:
+            x_now = x.copy()
+            if scaled:
+                x_now /= np.sqrt(Knorm)
+            prev_score = score
+            score = score_func(x_now)
 
-            if score_func is not None:
-                x_now = x.copy()
-                if scaled:
-                    x_now /= np.sqrt(Knorm)
-                prev_score = score
-                score = score_func(x_now)
+        # Progress
+        if verbose > 0:
+            print("it %i psnr %f error %f" % (i, score, error))
 
-            # Progress
-            if verbose > 0:
-                print("it %i psnr %f" % (i, score))
+        if score_func is not None and prev_score > score or error <= eps:
+            break
 
-            if score_func is not None and prev_score > score:
-                break
-
-            iter_timing.toc()
-
-        else:
-            iter_timing.toc()
+        iter_timing.toc()
 
     # Print out timings info.
     if verbose > 0:
