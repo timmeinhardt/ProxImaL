@@ -136,7 +136,7 @@ def solve(psi_fns, omega_fns, tau=None, alpha=1.0,
             score = score_func(x_now)
 
         # Progress
-        if verbose > 0:
+        if scaled is not None and verbose > 0:
             print("it %i psnr %f error %f" % (i, score, error))
 
         if score_func is not None and prev_score > score or error <= eps:
