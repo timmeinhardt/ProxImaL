@@ -6,6 +6,7 @@ import pybm3d
 class patch_BM3D(ProxFn):
     """The function for BM3D patch prior
     """
+
     def __init__(self, lin_op, sigma_fixed=0.0, patch_size=8, **kwargs):
         # Check for the shape
         if not (len(lin_op.shape) == 2 or len(lin_op.shape) == 3 and lin_op.shape[2] in [1, 3]):
