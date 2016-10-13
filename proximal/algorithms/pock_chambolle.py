@@ -170,11 +170,11 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
             eps_dual = np.sqrt(K.input_size) * eps_abs + eps_rel * np.linalg.norm(KTu) / sigma
 
             if score_func is not None:
-                x_now = x.copy()
+                x_copy = x.copy()
                 if scaled:
-                    x_now /= np.sqrt(Knorm)
+                    x_copy /= np.sqrt(Knorm)
                 prev_score = score
-                score = score_func(x_now)
+                score = score_func(x_copy)
 
             # Progress
             if verbose > 0:
@@ -213,6 +213,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                 )
 
             if score_func is not None and prev_score > score:
+                x = prev_x
                 break
 
             iter_timing.toc()
