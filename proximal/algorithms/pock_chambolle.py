@@ -44,12 +44,12 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
           max_iters=1000, eps_abs=1e-3, eps_rel=1e-3, x0=None,
           lin_solver="cg", lin_solver_options=None, conv_check=100,
           try_diagonalize=True, try_fast_norm=False, scaled=True,
-          metric=None, convlog=None, verbose=0, score_func=None,
-          Knorm=None):
+          metric=None, convlog=None, verbose=0, Knorm=None):
     # Can only have one omega function.
     assert len(omega_fns) <= 1
     prox_fns = psi_fns + omega_fns
     stacked_ops = vstack([fn.lin_op for fn in psi_fns])
+
     K = CompGraph(stacked_ops)
     v = np.zeros(K.input_size)
     # Select optimal parameters if wanted
@@ -92,7 +92,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
         convlog.record_objective(objval)
         convlog.record_timing(0.0)
 
-    score = 0
+    dist = 0
     for i in range(max_iters):
         iter_timing.tic()
         if convlog is not None:
@@ -169,12 +169,12 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
             K.adjoint(u, KTu)
             eps_dual = np.sqrt(K.input_size) * eps_abs + eps_rel * np.linalg.norm(KTu) / sigma
 
-            if score_func is not None:
-                x_copy = x.copy()
+            if metric is not None:
+                x_now = x.copy()
                 if scaled:
-                    x_copy /= np.sqrt(Knorm)
-                prev_score = score
-                score = score_func(x_copy)
+                    x_now /= np.sqrt(Knorm)
+                prev_dist = dist
+                dist = metric.eval(x_now)
 
             # Progress
             if verbose > 0:
@@ -205,14 +205,16 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                         break
 
                 # Evaluate metric potentially
-                print(score)
-                metstr = '' if metric is None else ", {}".format(metric.message(v))
+                metstr = ''
+                if metric is not None:
+                    metstr = ", {}".format(metric.message(x_now))
                 print(
                     "iter %d: ||r||_2 = %.3f, eps_pri = %.3f, ||s||_2 = %.3f, eps_dual = %.3f%s%s"
                     % (i, np.linalg.norm(r), eps_pri, np.linalg.norm(s), eps_dual, objstr, metstr)
                 )
 
-            if score_func is not None and prev_score > score:
+
+            if metric is not None and prev_dist > dist:
                 x = prev_x
                 break
 

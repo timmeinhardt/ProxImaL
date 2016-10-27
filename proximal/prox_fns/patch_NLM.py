@@ -53,7 +53,6 @@ class patch_NLM(ProxFn):
             np.copyto(v, self.tmpout)
 
         else:
-
             # Compute sigma
             sigma = np.sqrt(1.0 / rho)
 

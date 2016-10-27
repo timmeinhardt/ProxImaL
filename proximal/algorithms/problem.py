@@ -122,6 +122,9 @@ class Problem(object):
                 else:
                     psi_fns = prox_fns
                     omega_fns = []
+            else:
+                psi_fns = self.psi_fns
+                omega_fns = self.omega_fns
             # Scale the problem.
             if self.scale:
                 K = CompGraph(vstack([fn.lin_op for fn in psi_fns]),

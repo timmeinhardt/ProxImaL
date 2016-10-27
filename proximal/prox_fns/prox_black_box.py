@@ -13,7 +13,19 @@ class prox_black_box(ProxFn):
     def _prox(self, rho, v, *args, **kwargs):
         """The prox operator.
         """
+        sigma = np.sqrt(1.0 / rho)
+        # Params
+        if 'verbose' in kwargs and kwargs['verbose'] > 1:
+            print("Prox blackbox params are: [sigma ={0}]".format(sigma))
+
         v = v.copy()
+        v_min = np.amin(v)
+        v_max = np.amax(v)
+        v_max = np.maximum(v_max, v_min + 0.01)
+        # Scale and offset parameters d
+        v -= v_min
+        v /= (v_max - v_min)
+
         dst = self.__prox(v)
 
         np.copyto(v, dst)
