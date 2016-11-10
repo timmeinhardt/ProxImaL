@@ -63,8 +63,8 @@ class patch_NLM(ProxFn):
 
             # Params
             if kwargs['verbose'] > 1:
-                print("Prox NLM params are: [sigma ={0} prior={1} sigma_scale={2}]".format(
-                    sigma_estim, self.prior, self.sigma_scale))
+                print("Prox NLM params are: [sigma ={0} sigma_estim ={1} prior={2} sigma_scale={3}]".format(
+                    sigma, sigma_estim, self.prior, self.sigma_scale))
 
             # Scale d
             v = v.copy()
