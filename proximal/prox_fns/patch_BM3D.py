@@ -26,7 +26,7 @@ class patch_BM3D(ProxFn):
         else:
             sigma = np.sqrt(1.0 / rho)
 
-         # Scale d
+        # Scale d
         v = v.copy()
         v_min = np.amin(v)
         v_max = np.amax(v)

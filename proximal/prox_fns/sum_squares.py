@@ -99,7 +99,7 @@ class least_squares(sum_squares):
                 # TODO: FIX REAL TO IMAG
                 hsize = self.freq_shape if len(self.freq_shape) == 3 else (
                     self.freq_shape[0], self.freq_shape[1], 1)
-                hsizehalide = ((hsize[0] + 1) / 2 + 1, hsize[1], hsize[2], 2)
+                hsizehalide = (int((hsize[0] + 1) / 2 + 1), hsize[1], hsize[2], 2)
 
                 self.hsizehalide = hsizehalide
                 self.ftmp_halide = np.zeros(hsizehalide, dtype=np.float32, order='F')

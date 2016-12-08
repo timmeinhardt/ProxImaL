@@ -132,6 +132,13 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
             x[:] = omega_fns[0].prox(1.0 / tau, xtmp, x_init=prev_x,
                                      lin_solver=lin_solver, options=lin_solver_options).flatten()
 
+        # gamma = 0.1
+        # if verbose > 0:
+        #     print("PC params are: [gamma: %f theta: %f tau: %f sigma: %f]" % (gamma, theta, tau, sigma))
+        # theta = 1 / np.sqrt(1 + 2 * gamma * tau)
+        # tau *= theta
+        # sigma /= theta
+
         # Update xbar
         np.copyto(xbar, x)
         xbar += theta * (x - prev_x)
@@ -181,7 +188,9 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                 # Evaluate objective only if required (expensive !)
                 objstr = ''
                 if verbose == 2:
+                    #print([fn.value for fn in prox_fns])
                     K.update_vars(x)
+                    print({fn.__class__.__name__: fn.value for fn in prox_fns})
                     objstr = ", obj_val = %02.03e" % sum([fn.value for fn in prox_fns])
 
                 """ Old convergence check
