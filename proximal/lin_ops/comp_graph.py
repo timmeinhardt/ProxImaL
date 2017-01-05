@@ -40,7 +40,7 @@ class CompGraph(object):
                     node.set_implementation(implem)
                 # Zero out constants.
                 if isinstance(node, Constant):
-                    node = Constant(np.zeros(curr.shape))
+                    node = Constant(np.zeros(node.shape))
                     self.constants.append(node)
                 else:
                     node = cp.copy(node)
@@ -80,7 +80,7 @@ class CompGraph(object):
         # Make single split node as start node.
         copy_nodes = []
         offset = 0
-        for key, val in id2copy.items():
+        for key, val in list(id2copy.items()):
             copy_nodes.append(val)
             self.var_info[key] = offset
             offset += val.size
