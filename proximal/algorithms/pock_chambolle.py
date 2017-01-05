@@ -64,6 +64,8 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
     z = np.zeros(K.output_size)
 
     if x0 is not None:
+        if scaled:
+            x0 = x0.copy() * np.sqrt(Knorm)
         x[:] = np.reshape(x0, K.input_size)
         K.forward(x, y)
         xbar[:] = x
