@@ -38,7 +38,6 @@ class grad(LinOp):
 
         Reads from inputs and writes to outputs.
         """
-
         if self.implementation == Impl['halide'] and \
                 (len(self.shape) == 3 or len(self.shape) == 4) and self.dims == 2:
             # Halide implementation

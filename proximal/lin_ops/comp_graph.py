@@ -35,15 +35,15 @@ class CompGraph(object):
             self.nodes.append(curr)
             input_edges = []
             for node in curr.input_nodes:
+                # Default implementation.
+                if implem is not None:
+                    node.set_implementation(implem)
                 # Zero out constants.
                 if isinstance(node, Constant):
                     node = Constant(np.zeros(curr.shape))
                     self.constants.append(node)
                 else:
                     node = cp.copy(node)
-                    # Default implementation.
-                    if implem is not None:
-                        node.implem = implem
                 ready.append(node)
                 edge = Edge(node, curr, node.shape)
                 input_edges.append(edge)

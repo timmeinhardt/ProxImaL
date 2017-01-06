@@ -27,7 +27,7 @@ class Problem(object):
     """
 
     def __init__(self, prox_fns,
-                 implem=Impl['numpy'], try_diagonalize=True,
+                 implem=None, try_diagonalize=True,
                  absorb=True, merge=True,
                  try_split=True, try_fast_norm=True, scale=True,
                  psi_fns=None, omega_fns=None,
@@ -36,13 +36,22 @@ class Problem(object):
         if isinstance(prox_fns, ProxFn):
             prox_fns = [prox_fns]
         self.prox_fns = prox_fns
-        self.implem = implem
         self.try_diagonalize = try_diagonalize  # Auto diagonalize?
         self.try_split = try_split  # Auto partition?
         self.try_fast_norm = try_fast_norm  # Fast upper bound on ||K||?
         self.scale = scale  # Auto scale problem?
         self.absorb = absorb  # Absorb lin ops into prox fns?
         self.merge = merge  # Merge prox fns?
+
+        # Overwrite implementation
+        if implem is not None:
+            for fn in prox_fns:
+                fn.set_implementation(implem)
+            K = CompGraph(vstack([fn.lin_op for fn in prox_fns]),
+                                 implem=implem)
+        else:
+            implem = Impl['numpy']
+        self.set_implementation(implem)
 
         # Defaults for psi and omega fns.
         # Should have psi_fns + omega_fns == prox_fns
@@ -74,10 +83,17 @@ class Problem(object):
     def set_automatic_frequency_split(self, freq_split):
         self.freq_split = freq_split
 
-    def set_implementation(self, implem=Impl['numpy']):
+    def set_implementation(self, im):
         """Set the implementation of the lin ops and proxes.
         """
-        self.implem = implem
+        if im in Impl.values():
+            self.implementation = im
+        elif im in Impl.keys():
+            self.implementation = Impl[im]
+        else:
+            raise Exception("Invalid implementation.")
+
+        return self.implementation
 
     def set_solver(self, solver):
         """Set the solver.
@@ -127,17 +143,14 @@ class Problem(object):
                 omega_fns = self.omega_fns
             # Scale the problem.
             if self.scale:
-                K = CompGraph(vstack([fn.lin_op for fn in psi_fns]),
-                              implem=self.implem)
+                K = CompGraph(vstack([fn.lin_op for fn in psi_fns]))
                 Knorm = est_CompGraph_norm(K, try_fast_norm=self.try_fast_norm)
                 kwargs['Knorm'] = Knorm
                 for idx, fn in enumerate(psi_fns):
                     psi_fns[idx] = fn.copy(fn.lin_op / Knorm,
-                                           beta=fn.beta * np.sqrt(Knorm),
-                                           implem=self.implem)
+                                           beta=fn.beta * np.sqrt(Knorm))
                 for idx, fn in enumerate(omega_fns):
-                    omega_fns[idx] = fn.copy(beta=fn.beta / np.sqrt(Knorm),
-                                             implem=self.implem)
+                    omega_fns[idx] = fn.copy(beta=fn.beta / np.sqrt(Knorm))
             opt_val = module.solve(psi_fns, omega_fns,
                                    lin_solver=self.lin_solver,
                                    try_diagonalize=self.try_diagonalize,

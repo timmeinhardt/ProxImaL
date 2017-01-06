@@ -10,7 +10,7 @@ class ProxFn(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, lin_op, alpha=1.0, beta=1.0, b=0.0, c=0.0,
-                 gamma=0.0, d=0.0, implem=None):
+                 gamma=0.0, d=0.0, implem=Impl['numpy']):
         # Error checking.
         for elem, name in zip([b, c], ["b", "c"]):
             if not (np.isscalar(elem) or elem.shape == lin_op.shape):
@@ -22,10 +22,7 @@ class ProxFn(object):
             if not np.isscalar(elem):
                 raise Exception("%s must be a scalar." % name)
 
-        self.implem_key = implem
-        self.implementation = Impl['numpy']
-        if implem is not None:
-            self.set_implementation(implem)
+        self.set_implementation(implem)
 
         self.lin_op = lin_op
         self.alpha = float(alpha)
@@ -175,7 +172,7 @@ class ProxFn(object):
                      'c': self.c,
                      'b': self.b,
                      'd': self.d,
-                     'implem': self.implem_key}
+                     'implem': self.implementation}
         for key in curr_args.keys():
             if key not in kwargs:
                 kwargs[key] = curr_args[key]

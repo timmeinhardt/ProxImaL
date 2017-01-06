@@ -21,7 +21,7 @@ class LinOp(object):
         if implem is not None:
             self.set_implementation(implem)
         else:
-            self.implementation = Impl['numpy']
+            self.set_implementation(Impl['numpy'])
         super(LinOp, self).__init__()
 
     def format_shape(self, shape):
