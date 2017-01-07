@@ -35,10 +35,11 @@ class conv(LinOp):
                 # Halide FFT (pack into diag)
                 # TODO: FIX IMREAL LATER
                 hsize = arg.shape if len(arg.shape) == 3 else arg.shape + (1,)
-                output_fft_tmp = np.zeros(((hsize[0] + 1) / 2 + 1, hsize[1], hsize[2], 2),
+                output_fft_tmp = np.zeros((int((hsize[0] + 1) / 2 + 1), hsize[1], hsize[2], 2),
                                           dtype=np.float32, order='F')
                 Halide('fft2_r2c.cpp').fft2_r2c(self.kernel, self.kernel.shape[1] / 2,
                                                 self.kernel.shape[0] / 2, output_fft_tmp)
+
                 self.forward_kernel[:] = 0.
 
                 if len(arg.shape) == 2:
@@ -57,6 +58,7 @@ class conv(LinOp):
 
         Reads from inputs and writes to outputs.
         """
+        self.implementation = Impl['numpy']
         self.init_kernel()
         if self.implementation == Impl['halide'] and \
                 (len(self.shape) == 2 or (len(self.shape) == 3 and self.dims == 2)):
@@ -78,6 +80,7 @@ class conv(LinOp):
 
         Reads from inputs and writes to outputs.
         """
+        self.implementation = Impl['numpy']
         self.init_kernel()
         if self.implementation == Impl['halide'] and \
                 (len(self.shape) == 2 or (len(self.shape) == 3 and self.dims == 2)):

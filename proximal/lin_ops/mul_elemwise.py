@@ -17,7 +17,7 @@ class mul_elemwise(LinOp):
     """Elementwise multiplication weight*X with a fixed constant.
     """
 
-    def __init__(self, weight, arg, permutation_axis=None, implem=None):
+    def __init__(self, weight, arg, implem=None):
         assert (is_broadcastable(weight.shape, arg.shape) or \
             is_broadcastable(weight.shape[::-1], arg.shape[::-1]))
 
@@ -28,12 +28,6 @@ class mul_elemwise(LinOp):
             shape = arg.shape
 
         self.weight = weight
-        self.permutation_axis = permutation_axis
-
-        if permutation_axis is not None:
-            shape = list(shape)
-            shape[permutation_axis] = shape[permutation_axis] ** 2
-            shape = tuple(shape)
 
         input_nodes = [arg]
         if isinstance(weight, LinOp):
@@ -47,24 +41,15 @@ class mul_elemwise(LinOp):
         Reads from inputs and writes to outputs.
         """
         if isinstance(self.weight, LinOp):
-            weight = inputs[1]
+            if len(inputs) == 2:
+                weight = inputs[1]
+            else:
+                weight = outputs[1]
         else:
             weight = self.weight
 
-        transposed = False
-        # multiplication is broadcastable in leading dimensions
-        if is_broadcastable(inputs[0].shape[::-1], weight.shape[::-1]):
-            transposed = True
-            weight = weight.T
-            inputs[0] = inputs[0].T
-            outputs[0] = outputs[0].T
-
         if self.implementation == Impl['halide'] and (len(self.shape) in [2, 3]):
             # Halide implementation
-
-            if self.permutation_axis is not None:
-                print("WARNING: permutation_axis not yet supported for halide")
-                exit()
 
             weight = np.asfortranarray(weight.astype(np.float32))
             tmpout = np.zeros(weight.shape, dtype=np.float32, order='F')
@@ -75,31 +60,28 @@ class mul_elemwise(LinOp):
 
         else:
             # Numpy
-            if self.permutation_axis is None:
-                np.multiply(inputs[0], weight, outputs[0])
-            else:
-                old_permutation_axis_shape = np.sqrt(self.shape[self.permutation_axis]).astype(np.int)
-                for shift in range(1, old_permutation_axis_shape):
-                    if transposed:
-                        np.multiply(inputs[0],
-                                    np.roll(weight.T, shift, self.permutation_axis).T,
-                                    np.take(outputs[0].T, range(shift, shift + old_permutation_axis_shape), self.permutation_axis).T)
-                    else:
-                        np.multiply(inputs[0],
-                                    np.roll(weight, shift, self.permutation_axis),
-                                    np.take(outputs[0], range(shift, shift + old_permutation_axis_shape), self.permutation_axis))
+            transposed = False
+            # multiplication is not broadcastable in trailing but leading dimensions
+            if not is_broadcastable(inputs[0].shape, weight.shape) and \
+                is_broadcastable(inputs[0].shape[::-1], weight.shape[::-1]):
+                transposed = True
+                weight = weight.T
+                inputs[0] = inputs[0].T
+                outputs[0] = outputs[0].T
 
-        if transposed:
-            weight = weight.T
-            inputs[0] = inputs[0].T
-            outputs[0] = outputs[0].T
+            np.multiply(inputs[0], weight, outputs[0])
+
+            if transposed:
+                weight = weight.T
+                inputs[0] = inputs[0].T
+                outputs[0] = outputs[0].T
 
     def adjoint(self, inputs, outputs):
         """The adjoint operator.
 
         Reads from inputs and writes to outputs.
         """
-        self.forward(outputs, inputs)
+        self.forward(inputs, outputs)
 
     def is_diag(self, freq=False):
         """Is the lin op diagonal (in the frequency domain)?
