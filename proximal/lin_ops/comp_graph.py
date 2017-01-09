@@ -96,8 +96,8 @@ class CompGraph(object):
         self.edges += split_outputs
         self.output_edges[self.start] = split_outputs
         # A record of timings.
-        self.forward_log = TimingsLog(self.nodes + [self])
-        self.adjoint_log = TimingsLog(self.nodes + [self])
+        self.forward_log = TimingsLog(self.nodes + [str(self)])
+        self.adjoint_log = TimingsLog(self.nodes + [str(self)])
 
     def get_inputs(self, node):
         """Returns the input data for a node.
@@ -129,9 +129,9 @@ class CompGraph(object):
             node.forward(inputs, outputs)
             self.forward_log[node].toc()
         # Evaluate forward graph and time it.
-        self.forward_log[self].tic()
+        self.forward_log[str(self)].tic()
         self.traverse_graph(forward_eval, True)
-        self.forward_log[self].toc()
+        self.forward_log[str(self)].toc()
 
     def adjoint(self, u, v):
         """Evaluates the adjoint composition.
@@ -153,9 +153,9 @@ class CompGraph(object):
             node.adjoint(outputs, inputs)
             self.adjoint_log[node].toc()
         # Evaluate adjoint graph and time it.
-        self.adjoint_log[self].tic()
+        self.adjoint_log[str(self)].tic()
         self.traverse_graph(adjoint_eval, False)
-        self.adjoint_log[self].toc()
+        self.adjoint_log[str(self)].toc()
 
     def traverse_graph(self, node_fn, forward):
         """Traverse the graph and apply the given function at each node.
