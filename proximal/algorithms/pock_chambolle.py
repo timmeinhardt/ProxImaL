@@ -44,7 +44,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
           max_iters=1000, eps_abs=1e-3, eps_rel=1e-3, x0=None,
           lin_solver="cg", lin_solver_options=None, conv_check=100,
           try_diagonalize=True, try_fast_norm=False, scaled=True,
-          metric=None, convlog=None, verbose=0, Knorm=None):
+          metric=None, convlog=None, verbose=0, Knorm=None, img_log_dir=None):
     # Can only have one omega function.
     assert len(omega_fns) <= 1
     prox_fns = psi_fns + omega_fns
@@ -118,8 +118,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
 
             # Moreau identity: apply and time prox.
             prox_log[fn].tic()
-
-            y[slc] = (z_slc - sigma * fn.prox(sigma, z_slc / sigma, i, verbose=verbose)).flatten()
+            y[slc] = (z_slc - sigma * fn.prox(sigma, z_slc / sigma, i, verbose=verbose, metric=metric, img_log_dir=img_log_dir)).flatten()
             prox_log[fn].toc()
 
             offset += fn.lin_op.size
@@ -189,7 +188,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
             if verbose > 0:
                 # Evaluate objective only if required (expensive !)
                 objstr = ''
-                if verbose == 2:
+                if verbose > 1:
                     #print([fn.value for fn in prox_fns])
                     K.update_vars(x)
                     print({fn.__class__.__name__: fn.value for fn in prox_fns})
