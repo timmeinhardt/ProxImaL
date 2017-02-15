@@ -2,6 +2,7 @@ from __future__ import division
 import abc
 import numpy as np
 from .utils import psnr
+from skimage.measure import compare_ssim
 
 
 class metric(object):
@@ -53,3 +54,24 @@ class psnr_metric(metric):
         return psnr(np.reshape(v, self.ref.shape),
                     self.ref,
                     pad=self.pad, maxval=self.maxval)
+
+
+class ssim_metric(metric):
+    """SSIM metric
+    """
+
+    def __init__(self, ref, pad=None, decimals=2):
+        self.pad = pad
+        self.ref = ref
+        super(ssim_metric, self).__init__("SSIM", "", decimals)
+
+    def _eval(self, v):
+        """Evaluate SSIM metric
+        """
+        v_copy = np.reshape(v.copy(), self.ref.shape)
+        if self.pad is not None:
+            v_copy = v_copy[self.pad[0]:-self.pad[0],
+                            self.pad[1]:-self.pad[1]]
+            ref = self.ref[self.pad[0]:-self.pad[0],
+                           self.pad[1]:-self.pad[1]]
+        return compare_ssim(ref, v_copy)
