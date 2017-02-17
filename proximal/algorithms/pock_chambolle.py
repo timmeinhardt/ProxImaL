@@ -78,6 +78,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
     s = np.zeros(K.input_size)
 
     prev_x = x.copy()
+    x_opt = x.copy()
     prev_Kx = Kx.copy()
     prev_z = z.copy()
     prev_u = u.copy()
@@ -95,6 +96,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
         convlog.record_timing(0.0)
 
     dist = 0
+    dist_opt = 0
     for i in range(max_iters):
         iter_timing.tic()
         if convlog is not None:
@@ -216,9 +218,10 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                 )
 
 
-            #if metric is not None and prev_dist > dist:
-            #    x = prev_x
-            #    break
+            if metric is not None and dist > dist_opt:
+                x_opt = x
+                dist_opt = dist
+
 
             iter_timing.toc()
             if np.linalg.norm(r) <= eps_pri and np.linalg.norm(s) <= eps_dual:
@@ -243,7 +246,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
         print(K.adjoint_log)
 
     # Assign values to variables.
-    K.update_vars(x)
+    K.update_vars(x_opt)
 
     # Return optimal value.
     return sum([fn.value for fn in prox_fns])
