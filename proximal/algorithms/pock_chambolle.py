@@ -219,7 +219,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
 
 
             if metric is not None and dist > dist_opt:
-                x_opt = x
+                x_opt = x.copy()
                 dist_opt = dist
 
 
