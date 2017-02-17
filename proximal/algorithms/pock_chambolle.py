@@ -131,7 +131,8 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
         if len(omega_fns) > 0:
             xtmp = np.reshape(x, omega_fns[0].lin_op.shape)
             x[:] = omega_fns[0].prox(1.0 / tau, xtmp, x_init=prev_x,
-                                     lin_solver=lin_solver, options=lin_solver_options, verbose=verbose).flatten()
+                                     lin_solver=lin_solver, options=lin_solver_options, verbose=verbose,
+                                     metric=metric, img_log_dir=img_log_dir).flatten()
 
         # gamma = 0.1
         # if verbose > 0:
