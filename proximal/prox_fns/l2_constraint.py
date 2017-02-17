@@ -15,7 +15,7 @@ class l2_constraint(ProxFn):
     def _prox(self, rho, v, *args, **kwargs):
         """x = sign(v)*(|v| - |W|/rho)_+
         """
-        norm = np.linalg.norm(v.ravel(), 1)
+        norm = np.linalg.norm(v.ravel(), 2)
 
         if norm <= self.sigma_noise:
             return v
