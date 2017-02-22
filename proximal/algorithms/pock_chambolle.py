@@ -45,7 +45,7 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
           lin_solver="cg", lin_solver_options=None, conv_check=100,
           try_diagonalize=True, try_fast_norm=False, scaled=True,
           metric=None, convlog=None, verbose=0, Knorm=None, img_log_dir=None,
-          metric_break=False):
+          conv_mode="residual"):
     # Can only have one omega function.
     assert len(omega_fns) <= 1
     prox_fns = psi_fns + omega_fns
@@ -218,16 +218,18 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
                     % (i, np.linalg.norm(r), eps_pri, np.linalg.norm(s), eps_dual, objstr, metstr)
                 )
 
-
-            if metric is not None and dist > dist_opt:
-                x_opt = x.copy()
-                dist_opt = dist
-
-                if metric_break:
+            if metric is not None:
+                if dist > dist_opt:
+                    x_opt = x.copy()
+                    dist_opt = dist
+                elif conv_mode == "metric":
+                    x = x_opt
                     break
 
             iter_timing.toc()
-            if np.linalg.norm(r) <= eps_pri and np.linalg.norm(s) <= eps_dual:
+            if (conv_mode == "residual" and
+                np.linalg.norm(r) <= eps_pri and
+                np.linalg.norm(s) <= eps_dual):
                 break
 
         else:
@@ -248,8 +250,9 @@ def solve(psi_fns, omega_fns, tau=None, sigma=None, theta=None,
         print("K adjoint ops:")
         print(K.adjoint_log)
 
-    # Assign values to variables.
-    K.update_vars(x_opt)
+    if metric is not None and conv_mode == "metric_all_iter":
+        x = x_opt
+    K.update_vars(x)
 
     # Return optimal value.
     return sum([fn.value for fn in prox_fns])
