@@ -39,9 +39,42 @@ class patch_BM3D(ProxFn):
         if len(v.shape) == 2:
             v = v.reshape(v.shape  + (1,))
 
-        dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
-        dst = np.nan_to_num(dst).astype(v.dtype) * (v_max - v_min) + v_min
 
+        if CUDA_AVAILABLE:
+            #TODO: build python bindings with cython for bm3d-gpu
+            identifier = random.getrandbits(128)
+            bm3d_gpu_path = "/usr/gast/meinhard/applications/bm3d-gpu"
+            input_img_name = "input_" + identifier + ".png"
+            output_img_name = "output_" + identifier + ".png"
+            input_img_path = os.path.join(bm3d_gpu_path, input_img_name)
+            output_img_path = os.path.join(bm3d_gpu_path, output_img_name)
+
+            if v.shape[2] == 3:
+                color_mode = 'color'
+            else:
+                color_mode = 'nocolor'
+
+            cmd = ("export CUDA_HOME='/usr/local/cuda-7.5' && "
+                   "export LD_LIBRARY_PATH='$LD_LIBRARY_PATH:/usr/local/cuda-7.5/lib64' && "
+                   "cd %s &&"
+                   "./bm3d %s %s %f %s twostep quiet") % \
+                   (bm3d_gpu_path, input_img_name, output_img_name, sigma * 255.0, color_mode)
+
+            skimage.io.imsave(input_img_path, (np.squeeze(v)* 255.0).astype(np.uint8))
+            subprocess.call(cmd, shell=True)
+            dst = load_image(output_img_path)
+
+            try:
+                os.remove(input_img_path)
+                os.remove(output_img_path)
+            except OSError:
+                pass
+
+        else:
+
+            dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
+
+        dst = np.nan_to_num(dst).astype(v.dtype) * (v_max - v_min) + v_min
         np.copyto(v, dst)
 
         return np.squeeze(v)
