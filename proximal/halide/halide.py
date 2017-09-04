@@ -191,7 +191,7 @@ def gengen(generator_source, builddir='./build',
     # Target flags
     target_flags = "target=" + target
 
-    launcher_file = ''
+    header_file = object_file = launcher_file = ''
 
     try:
 
