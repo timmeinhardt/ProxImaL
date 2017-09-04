@@ -5,8 +5,10 @@ import os
 import subprocess
 import numpy as np
 import skimage
-# import pybm3d
-import pybm3d_gpu
+if CUDA_AVAILABLE:
+    import pybm3d_gpu
+else:
+    import pybm3d
 import random
 
 class patch_BM3D(ProxFn):
@@ -46,15 +48,12 @@ class patch_BM3D(ProxFn):
         if len(v.shape) == 2:
             v = v[..., None]
 
-        #if CUDA_AVAILABLE:
-            #v_uint8 = (255.0 * v).astype(np.uint8)
-            #dst_uint8 = np.array(pybm3d_gpu.bm3d.bm3d(v_uint8, sigma=sigma * 255.0))
-            #dst = dst_uint8.astype(v.dtype) / 255.0
-        #else:
-            #print("NO CPU BM3D")
-            #exit()
-            #dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
-        dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
+        if CUDA_AVAILABLE:
+            v_uint8 = (255.0 * v).astype(np.uint8)
+            dst_uint8 = np.array(pybm3d_gpu.bm3d.bm3d(v_uint8, sigma=sigma * 255.0))
+            dst = dst_uint8.astype(v.dtype) / 255.0
+        else:
+            dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
 
         dst = np.nan_to_num(dst).astype(v.dtype) * (v_max - v_min) + v_min
         np.copyto(v, dst)
