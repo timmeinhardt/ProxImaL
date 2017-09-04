@@ -18,7 +18,6 @@ setup(
     install_requires=["numpy >= 1.9",
                       "scipy >= 0.15",
                       "scikit-image",
-                      "Pillow",
-                      "pybm3d"],
+                      "Pillow"],
     use_2to3=True,
 )
