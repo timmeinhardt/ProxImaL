@@ -43,13 +43,13 @@ class patch_NLM(ProxFn):
         if self.implementation == Impl['halide'] and \
            len(self.lin_op.shape) == 3 and self.lin_op.shape[2] == 3 and \
            CUDA_AVAILABLE:
-
             # Halide implementation
             tmpin = np.asfortranarray(v.astype(np.float32))
 
             ext_libs = '-lopencv_core', '-lopencv_imgproc', '-lopencv_cudaarithm', '-lopencv_cudev', '-lopencv_photo', '-lm'
             ext_srcs = ['external/external_NLM.cpp']
             Halide('prox_NLM.cpp', external_source=ext_srcs, external_libs=ext_libs).prox_NLM(tmpin, 1. / rho, self.paramsh, self.tmpout)
+            # Halide('prox_NLM.cpp').prox_NLM(tmpin, 1. / rho, self.paramsh, self.tmpout)
             np.copyto(v, self.tmpout)
 
         else:

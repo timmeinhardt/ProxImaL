@@ -1,7 +1,13 @@
 from .prox_fn import ProxFn
-import numpy as np
-import pybm3d
+from proximal.utils.utils import CUDA_AVAILABLE
 
+import os
+import subprocess
+import numpy as np
+import skimage
+# import pybm3d
+import pybm3d_gpu
+import random
 
 class patch_BM3D(ProxFn):
     """The function for BM3D patch prior
@@ -36,43 +42,19 @@ class patch_BM3D(ProxFn):
         v -= v_min
         v /= (v_max - v_min)
 
+
         if len(v.shape) == 2:
-            v = v.reshape(v.shape  + (1,))
+            v = v[..., None]
 
-
-        if CUDA_AVAILABLE:
-            #TODO: build python bindings with cython for bm3d-gpu
-            identifier = random.getrandbits(128)
-            bm3d_gpu_path = "/usr/gast/meinhard/applications/bm3d-gpu"
-            input_img_name = "input_" + identifier + ".png"
-            output_img_name = "output_" + identifier + ".png"
-            input_img_path = os.path.join(bm3d_gpu_path, input_img_name)
-            output_img_path = os.path.join(bm3d_gpu_path, output_img_name)
-
-            if v.shape[2] == 3:
-                color_mode = 'color'
-            else:
-                color_mode = 'nocolor'
-
-            cmd = ("export CUDA_HOME='/usr/local/cuda-7.5' && "
-                   "export LD_LIBRARY_PATH='$LD_LIBRARY_PATH:/usr/local/cuda-7.5/lib64' && "
-                   "cd %s &&"
-                   "./bm3d %s %s %f %s twostep quiet") % \
-                   (bm3d_gpu_path, input_img_name, output_img_name, sigma * 255.0, color_mode)
-
-            skimage.io.imsave(input_img_path, (np.squeeze(v)* 255.0).astype(np.uint8))
-            subprocess.call(cmd, shell=True)
-            dst = load_image(output_img_path)
-
-            try:
-                os.remove(input_img_path)
-                os.remove(output_img_path)
-            except OSError:
-                pass
-
-        else:
-
-            dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
+        #if CUDA_AVAILABLE:
+            #v_uint8 = (255.0 * v).astype(np.uint8)
+            #dst_uint8 = np.array(pybm3d_gpu.bm3d.bm3d(v_uint8, sigma=sigma * 255.0))
+            #dst = dst_uint8.astype(v.dtype) / 255.0
+        #else:
+            #print("NO CPU BM3D")
+            #exit()
+            #dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
+        dst = np.array(pybm3d.bm3d.bm3d(v.astype(np.float32), sigma=sigma, patch_size=self.patch_size))
 
         dst = np.nan_to_num(dst).astype(v.dtype) * (v_max - v_min) + v_min
         np.copyto(v, dst)

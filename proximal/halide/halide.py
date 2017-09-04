@@ -269,7 +269,7 @@ def gengen(generator_source, builddir='./build',
         return output_lib, function_name_c, argument_names
 
     except Exception as e:
-        print('Error genererator compilation: {0}'.format(e.message), file=sys.stderr)
+        print('Error genererator compilation: {0}'.format(str(e)), file=sys.stderr)
         exit()
 
     finally:
@@ -331,7 +331,7 @@ def convert_to_ctypes(args, func):
                 raise ValueError('Unsupported type.')
 
     except Exception as e:
-        print('Error argument conversion: {0} in func {1}'.format(e.message, func), file=sys.stderr)
+        print('Error argument conversion: {0} in func {1}'.format(str(e), func), file=sys.stderr)
         exit()
 
     return cargs

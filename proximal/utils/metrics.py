@@ -51,7 +51,7 @@ class psnr_metric(metric):
     def _eval(self, v):
         """Evaluate PSNR metric
         """
-        return psnr(np.reshape(v, self.ref.shape),
+        return psnr(np.reshape(np.clip(v, 0.0, 1.0), self.ref.shape),
                     self.ref,
                     pad=self.pad, maxval=self.maxval)
 
