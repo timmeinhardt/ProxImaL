@@ -306,7 +306,7 @@ def convert_to_ctypes(args, func):
                             len(arg.shape)))
 
                 # Check if fortran array
-                if len(arg.shape) > 1 and not np.isfortran(arg):
+                if len(arg.shape) > 1 and not arg.flags.f_contiguous: # np.isfortran(arg):
                     print('Arg ', arg)
                     # Much faster and more natural halide code
                     raise ValueError('Currently supports only Fortran order')
