@@ -214,12 +214,11 @@ def gengen(generator_source, builddir='./build',
         # Run generator
         env = os.environ.copy()
         if sys.platform == "linux" or sys.platform == "linux2":
-            ld = 'LD_LIBRARY_PATH'
+            cmd = '{0} {1} {2} -e o,h -o {3} {4}'.format(
+            generator, generator_flag, function_flag, builddir, target_flags)
         elif sys.platform == "darwin":
-            ld = 'DYLD_LIBRARY_PATH'
-
-        cmd = 'export {5}={6} && {0} {1} {2} -e o,h -o {3} {4}'.format(
-            generator, generator_flag, function_flag, builddir, target_flags, ld, env['HALIDE_PATH'] + '/bin/')
+            cmd = 'export DYLD_LIBRARY_PATH={5} && {0} {1} {2} -e o,h -o {3} {4}'.format(
+            generator, generator_flag, function_flag, builddir, target_flags, env['HALIDE_PATH'] + '/bin/')
 
         if verbose:
             print('Calling generator')
