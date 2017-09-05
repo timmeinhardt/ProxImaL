@@ -67,7 +67,7 @@ extern "C" int NLM_extern(buffer_t * in, buffer_t * params, float sigma, int w, 
 
     //Params
     float sigma_fixed = param_buf[0];
-    float lambda_prior = param_buf[1];
+    // float lambda_prior = param_buf[1];
     float sigma_scale = param_buf[2];
     int prior = (int)param_buf[3];
 
@@ -111,21 +111,21 @@ extern "C" int NLM_extern(buffer_t * in, buffer_t * params, float sigma, int w, 
 	d_image.convertTo(d_image_uint, CV_8UC3, 255.0 * scale, 0.0);
 
 	//GpuMat resNLM_uint;
-	int64 start;
+	// int64 start;
 	if(prior == 0)
     {
-        start = getTickCount();
+        // start = getTickCount();
 		cuda::fastNlMeansDenoising(d_image_uint, d_image_uint, sigma_luma * 255.f, templateWindowSizeNLM, searchWindowSizeNLM);
 
-        const double timeSec = (getTickCount() - start) / getTickFrequency();
+        // const double timeSec = (getTickCount() - start) / getTickFrequency();
         // cout << "Fast NLM colored basic (CUDA): " << timeSec << " sec" << endl;
 	}
 	else if(prior == 1)
 	{
-	    start = getTickCount();
+	    // start = getTickCount();
 		cuda::fastNlMeansDenoisingColored(d_image_uint, d_image_uint, sigma_luma * 255.f, sigma_color * 255.f, templateWindowSizeNLM, searchWindowSizeNLM);
 
-        const double timeSec = (getTickCount() - start) / getTickFrequency();
+        // const double timeSec = (getTickCount() - start) / getTickFrequency();
         // cout << "Fast NLM colored CIELAB (CUDA): " << timeSec << " sec" << endl;
 	}
 
